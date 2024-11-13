@@ -1,12 +1,18 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation,useQueryClient } from '@tanstack/react-query';
 
 function App() {
+const queryClient=useQueryClient()
+
   const { data, error, isLoading } = useQuery({
-    queryKey: ['todo'],
+    queryKey: ['posts'],
     queryFn: () =>
       fetch('https://jsonplaceholder.typicode.com/posts').then((res) =>
         res.json()
       ),
+    // garbage collection time delete cache
+    gcTime:6000,
+    //refetching time
+    refetchInterval:4000
   });
 
   const { mutate, isError, isPending, isSuccess } = useMutation({
@@ -16,6 +22,9 @@ function App() {
         headers: { 'Content-type': 'application/json' },
         body: JSON.stringify(newPost),
       }).then((res) => res.json),
+    onSuccess: (newPost) => {
+      queryClient.setQueryData(['posts'],(oldPosts)=>[...oldPosts,newPost])//caching new data with old data
+    }
   });
 
   if (error || isError)
