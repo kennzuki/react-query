@@ -1,29 +1,52 @@
-
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 
 function App() {
-  const {data,error,isLoading} = useQuery({
+  const { data, error, isLoading } = useQuery({
     queryKey: ['todo'],
     queryFn: () =>
-      fetch('https://jsonplaceholder.typicode.com/todos').then((res) =>
+      fetch('https://jsonplaceholder.typicode.com/posts').then((res) =>
         res.json()
       ),
   });
 
-  if (error) <div className="text-red-500">There was an error loading</div>
-  if (isLoading) <div className="text-yellow-500">Data is loading...</div>
+  const { mutate, isError, isPending, isSuccess } = useMutation({
+    mutationFn: (newPost) =>
+      fetch('https://jsonplaceholder.typicode.com/posts', {
+        method: 'POST',
+        headers: { 'Content-type': 'application/json' },
+        body: JSON.stringify(newPost),
+      }).then((res) => res.json),
+  });
 
-  return <div className="p-12 border ">
-   
-   {data.map((todo) => (
-      <div key={todo.id} className="flex flex-col gap-4 border p-4">
-        <h1 className="">{todo.id}</h1>
-        <h1 className="">{todo.title}</h1>
-        <h1 className="">{todo.completed}</h1>
-      </div>
-    ))}
-   
-  </div>;
+  if (error || isError)
+    <div className='text-red-500'>There was an error loading</div>;
+  if (isLoading) <div className='text-yellow-500'>Data is loading...</div>;
+
+  return (
+    <div className='p-12 border '>
+      {isPending && <p className='text-green-500'>Data is pending</p>}
+      <button
+        className='py-2 px-3 text-white bg-blue-500 rounded-xl mb-4'
+        onClick={() =>
+          mutate({
+            userId: 5004,
+            id: 4650,
+            title: 'new ken post',
+            body: 'this is a new post',
+          })
+        }
+      >
+        Add post
+      </button>
+      {data.map((todo) => (
+        <div key={todo.id} className='flex flex-col gap-4 border p-4'>
+          <h1 className=''>ID:{todo.id}</h1>
+          <h1 className=''>Title: {todo.title}</h1>
+          <p className=''>Body:{todo.body}</p>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default App;
